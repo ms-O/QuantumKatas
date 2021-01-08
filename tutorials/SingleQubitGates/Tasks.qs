@@ -13,20 +13,21 @@ namespace Quantum.Kata.SingleQubitGates {
     
     // Exercise 1.
     operation ApplyY (q : Qubit) : Unit is Adj+Ctl {
-        // ...
-
+        Y(q);
     }
 
     // Exercise 2.
     operation GlobalPhaseI (q : Qubit) : Unit is Adj+Ctl {
-        // ...
-
+        Z(q);
+        Y(q);
+        X(q);
     }
 
     // Exercise 3.
     operation SignFlipOnZero (q : Qubit) : Unit is Adj+Ctl {
-        // ...
-        
+        X(q);
+        Z(q);
+        X(q); 
     }
 
     // Exercise 4.
