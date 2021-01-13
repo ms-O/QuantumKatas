@@ -9,6 +9,7 @@
 
 namespace Quantum.Kata.MultiQubitGates {
     open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Canon;
 
     operation CompoundGate (qs : Qubit[]) : Unit is Adj {
         S(qs[0]);
@@ -31,6 +32,13 @@ namespace Quantum.Kata.MultiQubitGates {
     }
 
     operation MultiControls (controls : Qubit[], target : Qubit, controlBits : Bool[]) : Unit is Adj {
-        // ...        
+        //if state of controls matches the control bits then do controlled X aka CNOT
+        //so need to check if they are the same, how can we do that?  we could do a swap test
+        //or we could take their outer product and see if it gives one
+
+        //or use the Q# function ControlledOnBitString
+        //Controlled X(controls, target);      
+
+        (ControlledOnBitString(controlBits, X))(controls, target);
     }
 }
