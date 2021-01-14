@@ -172,6 +172,7 @@ namespace Quantum.Kata.BasicGates {
     // the resulting two-qubit state can not be represented as a tensor product
     // of the states of individual qubits any longer; thus the qubits become entangled.
     operation TwoQubitGate1 (qs : Qubit[]) : Unit is Adj+Ctl {
+        //if control is in |0>, nothing happens, so |00>; if control in |1>, flips to |1>, so |11>
         CNOT(qs[0], qs[1]);
     }
 
@@ -183,7 +184,10 @@ namespace Quantum.Kata.BasicGates {
     // Note that while the starting state can be represented as a tensor product of single-qubit states,
     // the resulting two-qubit state can not be represented in such a way.
     operation TwoQubitGate2 (qs : Qubit[]) : Unit is Adj+Ctl {
-        // ...
+        //Controlled Z([control], target);
+        //if control in |1>, then apply Z, for |10> nothing changes bc Z|0> is |0>,
+        //but for |11> this becomes -|11>
+        Controlled Z([qs[0]], qs[1]);
     }
 
 
@@ -193,9 +197,22 @@ namespace Quantum.Kata.BasicGates {
     // Goal:  Change the two-qubit state to α|00⟩ + γ|01⟩ + β|10⟩ + δ|11⟩.
     operation TwoQubitGate3 (qs : Qubit[]) : Unit is Adj+Ctl {
         // Hint: this task can be solved using one intrinsic gate;
+        //SWAP(qs[0], qs[1]);
+
         // as an exercise, try to express the solution using several
         // (possibly controlled) Pauli gates.
-        // ...
+        //trick is to reverse the target and control to deal with "leading 0 state"
+        //step 1 CNOT the normal way with qs[0] is control and qs[1] is target
+        //outcome of step 1 will be α|00⟩ + β|01⟩ + γ|11⟩ + δ|10⟩
+        CNOT(qs[0], qs[1]);
+
+        //step 2 CNOT the flip way with the control and target reversed
+        //outcome of step 2 will be α|00⟩ + β|11⟩ + γ|01⟩ + δ|10⟩ --> γ now in right place
+        CNOT(qs[1], qs[0]);
+
+        //step 3 CNOT again, the normal way
+        //outcome of step 3 will be α|00⟩ + β|10⟩ + γ|01⟩ + δ|11⟩ --> β and δ now in right place
+        CNOT(qs[0], qs[1]);
     }
 
 
@@ -206,7 +223,7 @@ namespace Quantum.Kata.BasicGates {
     //        i.e., change the three-qubit state to
     //        α|000⟩ + β|001⟩ + γ|010⟩ + δ|011⟩ + ε|100⟩ + ζ|101⟩ + θ|110⟩ + η|111⟩.
     operation ToffoliGate (qs : Qubit[]) : Unit is Adj+Ctl {
-        // ...
+        CCNOT(qs[0], qs[1], qs[2]);
     }
 
 
@@ -216,7 +233,10 @@ namespace Quantum.Kata.BasicGates {
     // Goal:  Swap the states of second and third qubit if and only if the state of the first qubit is |1⟩:
     //        α|000⟩ + β|001⟩ + γ|010⟩ + δ|011⟩ + ε|100⟩ + η|101⟩ + ζ|110⟩ + θ|111⟩.
     operation FredkinGate (qs : Qubit[]) : Unit is Adj+Ctl {
-        // ...
+        // Fredkin is Controlled SWAP
+        let control = [qs[0]]; 
+        let target = (qs[1], qs[2]);
+        Controlled SWAP(control, target);
     }
 
 }
