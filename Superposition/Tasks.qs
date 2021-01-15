@@ -148,7 +148,7 @@ namespace Quantum.Kata.Superposition {
             H(qs[0]);
             X(qs[1]);
             CNOT(qs[0], qs[1]);
-            CZ(qs[0], qs[1]);
+            CZ(qs[0], qs[1]);  //not sure why this step fails
 	    }
     }
 
@@ -157,9 +157,23 @@ namespace Quantum.Kata.Superposition {
     // Input: N qubits in |0...0⟩ state.
     // Goal: create a GHZ state (|0...0⟩ + |1...1⟩) / sqrt(2) on these qubits.
     operation GHZ_State (qs : Qubit[]) : Unit {
-        // Hint: N can be found as Length(qs).
+        let n = Length(qs);
 
-        // ...
+        //this is like a big Bell state |Φ⁺⟩ = (|00⟩ + |11⟩) / sqrt(2)
+        //first make |Φ⁺⟩ with 2 qb, then keep CNOT'ing the rest using same index for ctl & current qb for target
+
+        //special case n = 1
+        if (n == 1) {
+            H(qs[0]);
+        }
+        else {
+            H(qs[0]);
+            CNOT(qs[0], qs[1]);
+
+            for (index in 2 .. n-1) {
+                CNOT(qs[0], qs[index]);  
+            }
+	    }
     }
 
 
@@ -168,7 +182,8 @@ namespace Quantum.Kata.Superposition {
     // Goal: create an equal superposition of all basis vectors from |0...0⟩ to |1...1⟩
     // (i.e. state (|0...0⟩ + ... + |1...1⟩) / sqrt(2^N) ).
     operation AllBasisVectorsSuperposition (qs : Qubit[]) : Unit {
-        // ...
+
+
     }
 
 
