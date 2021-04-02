@@ -23,11 +23,12 @@ namespace Quantum.Kata.SingleQubitGates {
         X(q);
     }
 
-    // Exercise 3.
+    // Exercise 3. trying to get to -a|0> + b|1>
     operation SignFlipOnZero (q : Qubit) : Unit is Adj+Ctl {
-        X(q);
-        Z(q);
-        X(q); 
+        //originally given a|0> + b |1>
+        X(q); //a|1> + b|0>
+        Z(q); //-a|1> + b|0>
+        X(q); // -a|0> + b|1>
     }
 
     // Exercise 4.

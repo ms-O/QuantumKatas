@@ -51,8 +51,8 @@ namespace Quantum.Kata.Superposition {
     operation MinusState (q : Qubit) : Unit {
         // In this task, as well as in all subsequent ones, you have to come up with the solution yourself.
 
-        X(q);
-        H(q);
+        X(q); //flips to |1>
+        H(q); //creates |->
     }
 
 
@@ -134,22 +134,22 @@ namespace Quantum.Kata.Superposition {
             H(qs[0]);
             CNOT(qs[0], qs[1]);
             CZ(qs[0], qs[1]);
-	    }
+        }
 
         // |Ψ⁺⟩
         if (index == 2) {
             H(qs[0]);
             X(qs[1]);
             CNOT(qs[0], qs[1]);
-	    }
+        }
 
         // |Ψ⁺⟩ and Controlled Z to flip sign
         if (index == 3) {
             H(qs[0]);
             X(qs[1]);
+            CZ(qs[0], qs[1]);
             CNOT(qs[0], qs[1]);
-            CZ(qs[0], qs[1]);  //not sure why this step fails
-	    }
+        }
     }
 
 
@@ -173,7 +173,7 @@ namespace Quantum.Kata.Superposition {
             for (index in 2 .. n-1) {
                 CNOT(qs[0], qs[index]);  
             }
-	    }
+        }
     }
 
 
@@ -182,8 +182,11 @@ namespace Quantum.Kata.Superposition {
     // Goal: create an equal superposition of all basis vectors from |0...0⟩ to |1...1⟩
     // (i.e. state (|0...0⟩ + ... + |1...1⟩) / sqrt(2^N) ).
     operation AllBasisVectorsSuperposition (qs : Qubit[]) : Unit {
-
-
+        //every time we do H, we get superpos. of |0> and |1>
+        //overall state is tensor prod, so if we apply H to each q, we get all state combos
+        for (q in qs) {
+            H(q);
+        }
     }
 
 
@@ -200,7 +203,15 @@ namespace Quantum.Kata.Superposition {
     // Example: for N = 2 and isEven = true the required state is (|00⟩ + |10⟩) / sqrt(2), 
     //      and for N = 2 and isEven = false - (|01⟩ + |11⟩) / sqrt(2).
     operation EvenOddNumbersSuperposition (qs : Qubit[], isEven : Bool) : Unit {
-        // ...
+        let n = Length(qs);
+
+        for (index in 0..n-2) {
+            H(qs[index]);
+        }
+
+        if (!isEven) {
+            X(qs[n-1]);
+        }
     }
     
 
@@ -219,7 +230,16 @@ namespace Quantum.Kata.Superposition {
         Fact(Length(bits) == Length(qs), "Arrays should have the same length");
         Fact(Head(bits), "First bit of the input bit string should be set to true");
 
-        // ...
+        let n = Length(qs);
+        H(qs[0]);
+        if (n > 1) {
+            for (index in 1..n-1) {
+                if (bits[index]) {
+                    CNOT(qs[0], qs[index]);
+                }
+            }
+            
+        }
     }
 
 
@@ -235,7 +255,44 @@ namespace Quantum.Kata.Superposition {
     // You are guaranteed that the both bit strings have the same length as the qubit array,
     // and that the bit strings will differ in at least one bit.
     operation TwoBitstringSuperposition (qs : Qubit[], bits1 : Bool[], bits2 : Bool[]) : Unit {
-        // ...
+
+        using (ancilla = Qubit()) {
+            let n = Length(qs);
+            if (n == 1) {
+                H(qs[0]);
+            }
+            else {
+                //put ancilla in superpos like the first bit in 1.11
+                H(ancilla);
+
+                //riff on 1.11 but for the 2 bit strings 
+                //could generalize, here just ack that we always have 2 bit strings
+                    
+                for (index in 0..n-1) {
+                    if (bits1[index]) {
+                        //anti-controlled CNOT
+                        (ControlledOnBitString([false], X))([ancilla], qs[index]);
+                        //CNOT(ancilla, qs[index]);                      
+                    }
+                    if (bits2[index]) {
+                        CNOT(ancilla, qs[index]);                      
+                    }
+                }
+                    
+                Message("State at end of alg");
+                DumpMachine();
+                //ancilla skews the state, so get it out of the equation
+                //we have to UNcompute it - PQC Ch. 5 "Uncomputing" section
+                //we can't just reset it or read it because it has become entangled
+                //so we have to undo (reverse) all that was done to it to set it back to |0>
+                //we don't have to worry about the |0> part of the superpos, just |0>, i.e. just what bits2 did
+                    
+                (ControlledOnBitString(bits2, X))(qs, ancilla);
+
+                Message("State after setting ancilla to 0");
+                DumpMachine();
+            }
+        }
     }
 
 
@@ -288,7 +345,8 @@ namespace Quantum.Kata.Superposition {
         // Hint: Experiment with rotation gates from the Microsoft.Quantum.Intrinsic namespace.
         // Note that all rotation operators rotate the state by _half_ of its angle argument.
 
-        // ...
+        //since it rotates by half-angle, just double the angle to get the desired effect
+        Ry(2.0 * alpha, q);
     }
 
 
@@ -296,7 +354,8 @@ namespace Quantum.Kata.Superposition {
     // Input: two qubits in |00⟩ state (stored in an array of length 2).
     // Goal: change the state to 1/sqrt(2)|00⟩ + 1/2|10⟩ + 1/2|11⟩.
     operation ControlledRotation (qs : Qubit[]) : Unit {
-        //...
+        H(qs[0]);
+        Controlled H([qs[0]], qs[1]);
     }
 
 
@@ -304,7 +363,13 @@ namespace Quantum.Kata.Superposition {
     // Input: 2 qubits in |00⟩ state (stored in an array of length 2).
     // Goal: change the state to (|00⟩ + |01⟩ + |10⟩) / sqrt(3).
     operation ThreeStates_TwoQubits (qs : Qubit[]) : Unit {
-        // ...
+        //H on both produces all 4 states
+        //need to discard |11> - like a CCNOT back on itself
+        H(qs[0]);
+        H(qs[1]);
+        //CCNOT(qs[0], qs[1], qs); <-- want target qs to be the superpos of both
+        CCNOT(qs[0], qs[1], qs[0]); //can't do this -- use an ancilla instead
+        CNOT(qs[1], qs[1]);
     }
 
 
