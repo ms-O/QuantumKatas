@@ -49,7 +49,7 @@ namespace Quantum.Kata.GroversAlgorithm {
     //       If the query register is in state (|00...0⟩ + |11...1⟩) / sqrt(2), and the target is in state |0⟩,
     //       the joint state of the query register and the target qubit should be (|00...00⟩ + |11...11⟩) / sqrt(2).
     operation Oracle_AllOnes (queryRegister : Qubit[], target : Qubit) : Unit is Adj {
-        // ...
+        Controlled X(queryRegister, target);
     }
     
     
@@ -65,7 +65,26 @@ namespace Quantum.Kata.GroversAlgorithm {
     //        If the register is in state |0000000⟩, leave the target qubit unchanged.
     //        If the register is in state |10101⟩, flip the target qubit.
     operation Oracle_AlternatingBits (queryRegister : Qubit[], target : Qubit) : Unit is Adj {
-        // ...
+        //we know how to do this for all 1's, so we could use that if we change
+        //queryRegister to all ones -- but we're not supposed to change that register
+        //however we CAN change it if we UNCOMPUTE our changes later
+        //we can use the within-apply to help with that
+        //also, note that the queryRegister starts with 1 and alternates with 0
+        //so we want to skip qo, q2, q4... but flip q1, q3, q5...
+
+        within {
+            //flip everything to 1
+            for (index in 0..Length(queryRegister)-1) {
+                if (index % 2 == 1) {
+                    X(queryRegister[index]);
+                }
+            }
+        }
+        apply {
+            //do what we did in Task 1.1
+            Controlled X(queryRegister, target);
+            //when this block is exited, uncompute will be done automatically
+        }
     }
     
     
@@ -85,7 +104,7 @@ namespace Quantum.Kata.GroversAlgorithm {
         // You don't need to modify it. Feel free to remove it, this won't cause your code to fail.
         EqualityFactI(Length(queryRegister), Length(pattern), "Arrays should have the same length");
 
-        // ...
+        (ControlledOnBitString(pattern, X))(queryRegister, target);
     }
     
     
@@ -122,7 +141,7 @@ namespace Quantum.Kata.GroversAlgorithm {
     // Note:  If the register started in the |0...0⟩ state, this operation
     //        will prepare an equal superposition of all 2^N basis states.
     operation HadamardTransform (register : Qubit[]) : Unit is Adj {
-        // ...
+        ApplyToEachA(H, register);
     }
     
     
@@ -144,8 +163,16 @@ namespace Quantum.Kata.GroversAlgorithm {
             
         // Hint 2: You can use the same trick as in the oracle converter task.
         // Alternatively, consider using the multi-controlled Z gate.
+        within {
+            ApplyToEachA(X, register);
+        }
+        apply {
+            //controlled Z back on itself
+            let n = Length(register);
+            Controlled Z(register[0..n-2], register[n-1]);
+        }
         
-        // ...
+        //ApplyMultiControlledCA(Z, ?, queryRegister, target);
     }
     
     
@@ -163,7 +190,7 @@ namespace Quantum.Kata.GroversAlgorithm {
         //    3) perform a conditional phase shift
         //    4) apply the Hadamard transform again
             
-        // ...
+        
     }
     
     
